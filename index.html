@@ -1,0 +1,396 @@
+<title>김선숙 온라인 강의실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style id="app-style">
+/* Layout: a measurement sheet. The course's weeks are drawn as a stem plot that doubles as navigation. */
+:root{
+  --bg:#f1f5f6;--panel:#fbfdfd;--ink:#14293a;--muted:#566b79;--line:#cdd9de;--grid:#e1e9ec;
+  --accent:#0a6a8c;--on-accent:#ffffff;--soft:#dcecf1;--trace:#b8640f;--good:#1c7a55;--bad:#b23b34;
+  --display:"Black Han Sans","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101a20;--panel:#172329;--ink:#e3ecef;--muted:#9db0ba;--line:#2f414b;--grid:#1f2e36;
+  --accent:#62bedb;--on-accent:#08202a;--soft:#1d3843;--trace:#e7a35a;--good:#62c79d;--bad:#ef8b83;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101a20;--panel:#172329;--ink:#e3ecef;--muted:#9db0ba;--line:#2f414b;--grid:#1f2e36;
+  --accent:#62bedb;--on-accent:#08202a;--soft:#1d3843;--trace:#e7a35a;--good:#62c79d;--bad:#ef8b83;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.7 var(--body);word-break:keep-all;overflow-wrap:anywhere}
+#app{max-width:1120px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1,h2,h3,p,ul,ol{margin:0}
+h1{font:400 clamp(2rem,6vw,3.1rem)/1.15 var(--display);text-wrap:balance}
+h2{font-size:1.45rem;line-height:1.35;font-weight:700;text-wrap:balance}
+h3{font-size:1rem;font-weight:700}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font:500 .78rem/1.4 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.stack{display:grid;gap:12px;min-width:0}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.btn{font:500 .94rem/1.3 var(--body);padding:10px 16px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--bad)}
+.link{background:none;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.course-card{display:grid;gap:8px;text-align:left;padding:16px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:inherit;cursor:pointer;font:inherit;width:100%}
+.course-card:hover{border-color:var(--accent)}
+.course-card b{font-size:1.2rem}
+.trace{width:100%;height:56px;display:block}
+.trace path{fill:none;stroke:var(--trace);stroke-width:1.4}
+.trace line{stroke:var(--grid)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px;display:grid;gap:16px;min-width:0}
+.plot{background-image:linear-gradient(var(--grid) 1px,transparent 1px);background-size:100% 25%;border-bottom:2px solid var(--ink);display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);height:96px}
+.stem{all:unset;box-sizing:border-box;position:relative;cursor:pointer;display:block;height:100%}
+.stem:focus-visible{outline:2px solid var(--accent)}
+.stem i{position:absolute;left:50%;bottom:0;width:2px;margin-left:-1px;height:calc(6px + var(--v)*84px);background:var(--accent)}
+.stem i::after{content:"";position:absolute;left:-4px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--accent)}
+.stem.empty i::after{background:var(--panel)}
+.stem.exam i,.stem.exam i::after{background:var(--trace);border-color:var(--trace)}
+.stem.exam.empty i::after{background:var(--panel)}
+.stem.now{background:var(--soft)}
+.axis{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);font:400 .72rem/1.6 var(--mono);color:var(--muted);text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.84rem;color:var(--muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{all:unset;cursor:pointer;padding:8px 14px;font-weight:500;color:var(--muted);border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent)}
+.split{display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px;align-items:start}
+.weeks{display:grid;list-style:none;padding:0;border-top:1px solid var(--line)}
+.weeks button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:8px;padding:8px 6px;border-bottom:1px solid var(--line);width:100%;font-size:.92rem;line-height:1.45}
+.weeks button:hover{background:var(--soft)}
+.weeks button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.weeks button[aria-current="true"]{background:var(--soft);font-weight:700}
+.weeks .n{font-family:var(--mono);color:var(--muted)}
+.state{font:400 .74rem/1.9 var(--mono);color:var(--muted)}
+.state.done{color:var(--good)}
+.tag{font:500 .74rem/1.5 var(--mono);color:var(--trace);border:1px solid var(--trace);padding:0 6px;border-radius:3px;display:inline-block}
+.block{display:grid;gap:8px;padding-top:16px;border-top:1px solid var(--line)}
+.block ol,.block ul{padding-left:1.3em}
+.checks{list-style:none;padding:0;display:grid;gap:6px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input{margin-top:.45em;width:16px;height:16px;flex:none;accent-color:var(--accent)}
+.funcs{display:flex;flex-wrap:wrap;gap:6px}
+.funcs code{background:var(--soft);padding:1px 7px;border-radius:3px}
+.q{display:grid;gap:6px}
+.q fieldset{border:0;padding:0;margin:0;display:grid;gap:4px}
+.q legend{padding:0;font-weight:500;margin-bottom:4px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:4px;padding:7px 12px;display:block;width:100%}
+.opt:hover{border-color:var(--accent)}
+.opt:focus-visible{outline:2px solid var(--accent)}
+.opt.right{border-color:var(--good);color:var(--good);font-weight:500}
+.opt.wrong{border-color:var(--bad);color:var(--bad)}
+.why{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;list-style:none;padding:0!important;display:grid;gap:4px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:24px minmax(0,1fr)}
+.steps li::before{content:counter(s);font-family:var(--mono);color:var(--muted)}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.92rem;line-height:1.5}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:.82rem}
+td.num{font-family:var(--mono);white-space:nowrap}
+tr.exam td{color:var(--trace)}
+form{display:grid;gap:12px}
+label.f{display:grid;gap:4px;font-weight:500;font-size:.92rem}
+input[type=text],input[type=url],textarea{font:400 .95rem/1.5 var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);width:100%}
+textarea{min-height:130px;font-family:var(--mono);font-size:.86rem}
+.hint{font-weight:400;font-size:.84rem;color:var(--muted)}
+.notice{padding:10px 14px;background:var(--soft);border-radius:4px;font-size:.92rem}
+.notice.err{color:var(--bad)}
+.segs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--soft);padding:4px;border-radius:6px}
+.seg{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:10px 6px;border-radius:4px;font-weight:700;font-size:.95rem;color:var(--muted)}
+.seg[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.viewer{display:grid;gap:8px;min-width:0}
+.frame{background:var(--bg);border:1px solid var(--line);border-radius:4px;aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden;max-width:100%}
+.frame img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none;user-select:none}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.deck-tabs .btn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);font-weight:700}
+.pager{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+@media (max-width:760px){
+  .split{grid-template-columns:minmax(0,1fr)}
+  .weekcol{display:none}
+  .sheet{padding:16px}
+  .axis span:nth-child(even){visibility:hidden}
+}
+</style>
+<div id="app"></div>
+<script type="application/json" id="courses-data">{"name":"김선숙 온라인 강의실","courses":[{"id":"random-signals","title":"랜덤신호론","subtitle":"신호와 랜덤 현상을 Colab 실습으로 이해합니다","overview":"신호와 랜덤 현상의 기본 개념을 이해하고, 파이썬으로 랜덤 신호와 잡음을 생성해 시각화·분석합니다. 평균, 분산, 상관, 전력스펙트럼밀도 같은 통계적 특성을 복잡한 수식 없이 직관적으로 익히고, 랜덤 신호 데이터를 활용한 기초 머신러닝 응용 사례를 체험합니다.","meta":[["대상","대학교 1~2학년"],["선수지식","신호 및 정보통신 관련 기초 지식 없음"],["수업 방식","이론(개념 중심, 복잡한 수식 최소화) + 구글 코랩(파이썬) 실습 병행"],["운영 환경","구글 코랩 (별도 프로그램 설치 불필요)"],["평가 방향","개념 이해 + 실습 수행·결과 해석 중심 (단순 암기 및 복잡 수식 계산 지양)"]],"objectives":["신호, 이산표본, 랜덤신호와 잡음의 기본 개념을 설명할 수 있다.","평균, 분산, 상관함수, 전력스펙트럼밀도의 의미를 직관적으로 설명할 수 있다.","파이썬(코랩)을 사용하여 랜덤 신호와 잡음을 생성하고 시각화할 수 있다.","이동평균 등 기법으로 신호 전처리와 잡음을 감소시키는 실습을 수행할 수 있다.","랜덤 신호 데이터를 활용한 기초 회귀 및 분류 머신러닝 응용을 이해할 수 있다."],"grading":[["출석 및 수업 참여","20%","수업 참여 포함"],["실습 보고서","30%","주차별 실습 결과 및 해석"],["중간평가","20%","개념 퀴즈 + 미니 실습"],["기말평가","30%","개념 + 최종 실습 프로젝트 (랜덤 신호 생성·분석 응용)"]],"weeks":[{"n":1,"title":"랜덤신호와 머신러닝","concepts":"신호, 데이터, 랜덤의 의미. 랜덤신호의 활용 분야 소개","practice":"Colab 접속, 셀 실행, 기본 그래프 체험","links":[{"label":"학생용 Colab","url":"https://colab.research.google.com/drive/1ebYgAPzRH-oOlmtl5GuecttUIx4Ky8iu"}],"goals":["신호, 데이터, 랜덤의 의미를 설명할 수 있다.","랜덤신호가 쓰이는 분야를 예로 들 수 있다.","Colab에서 셀을 실행하고 기본 그래프를 볼 수 있다."],"reflect":"규칙적인 신호와 랜덤 신호는 그래프에서 어떻게 다르게 보이나요?","check":["Colab에 접속해 셀을 실행할 수 있다.","신호, 데이터, 랜덤의 의미를 말할 수 있다.","랜덤신호의 활용 분야를 하나 이상 들 수 있다."],"quiz":[{"q":"1초마다 온도를 재서 기록한 값들의 모음은 무엇일까요?","options":["데이터","잡음","주파수"],"a":0,"why":"신호를 일정한 순간에 측정해 기록한 값들의 모음이 데이터입니다."},{"q":"랜덤신호의 특징으로 맞는 것은?","options":["다음 값을 정확히 예측할 수 있다","순간값을 정확히 예측하기 어렵지만 전체 특징은 분석할 수 있다","분석할 수 없어 쓸모가 없다"],"a":1,"why":"개별 값은 예측하기 어려워도 중심과 흔들림 같은 전체 특징은 살펴볼 수 있습니다."}],"decks":[{"label":"강의 슬라이드","id":"rs01","n":19}]},{"n":2,"title":"Python 아주 기초","concepts":"측정값과 변수의 개념","practice":"변수, 숫자, 리스트, print() 기본 사용","funcs":["print()"],"goals":["측정값을 변수에 저장할 수 있다.","숫자와 리스트를 다룰 수 있다.","print()로 결과를 확인할 수 있다."],"reflect":"측정값을 변수나 리스트에 담으면 무엇이 편리해지나요?","check":["변수에 측정값을 저장할 수 있다.","리스트에 여러 값을 담을 수 있다.","print()로 값을 출력할 수 있다."],"quiz":[{"q":"temperature = 25.3 에서 = 의 의미는?","options":["양쪽이 같은지 비교한다","오른쪽 값을 왼쪽 변수에 넣는다","값을 출력한다"],"a":1,"why":"=는 오른쪽 값을 왼쪽 변수에 저장합니다."},{"q":"measurements = [21.5, 22.0, 21.8]일 때 measurements[0]의 값은?","options":["21.5","22.0","21.8"],"a":0,"why":"리스트의 번호는 0부터 시작합니다."}]},{"n":3,"title":"NumPy 배열","concepts":"표본과 신호 데이터, 이산시간 신호 개념 소개","practice":"배열 생성, 인덱싱, 배열 사칙연산","funcs":["np.array()"],"links":[{"label":"학생용 Colab","url":"https://colab.research.google.com/drive/180KToLUD5lmh8y1UKK3d7kSCtmCHGhHl"}],"goals":["표본과 이산시간 신호의 개념을 설명할 수 있다.","NumPy 배열을 만들고 인덱싱할 수 있다.","배열 사칙연산을 수행할 수 있다."],"reflect":"연속적인 신호를 표본으로 나타내면 어떤 점이 좋고, 어떤 점을 주의해야 할까요?","check":["표본과 이산시간 신호의 의미를 말할 수 있다.","배열을 만들고 원하는 값을 꺼낼 수 있다.","배열 사칙연산의 결과를 예측할 수 있다."],"quiz":[{"q":"arr = np.array([1, 2, 3])일 때 arr * 2의 결과는?","options":["[1, 2, 3, 1, 2, 3]","[2 4 6]","오류"],"a":1,"why":"배열은 모든 값에 한 번에 계산됩니다. 이어 붙이는 것은 리스트입니다."},{"q":"이산시간 신호란?","options":["일정한 간격으로 측정한 표본들의 나열","항상 0인 신호","소리로만 된 신호"],"a":0,"why":"연속적인 신호를 일정한 간격으로 측정하면 표본의 나열이 됩니다."}]},{"n":4,"title":"신호의 대표값","concepts":"평균, 최댓값, 최솟값","practice":"센서 데이터 요약 통계 계산 실습","funcs":["np.mean()","np.max()","np.min()"],"goals":["평균, 최댓값, 최솟값의 의미를 설명할 수 있다.","센서 데이터의 요약 통계를 계산할 수 있다."],"reflect":"센서값을 모두 읽는 대신 대표값으로 요약하면 무엇을 얻고 무엇을 놓치나요?","check":["평균, 최댓값, 최솟값의 의미를 말할 수 있다.","센서 데이터의 요약 통계를 계산할 수 있다."],"quiz":[{"q":"측정값 합이 175.0이고 개수가 7개일 때 평균은?","options":["25.0","7.0","175.0"],"a":0,"why":"평균 = 합 ÷ 개수 = 175.0 ÷ 7 = 25.0입니다."},{"q":"측정값 하나가 유난히 클 때 가장 크게 달라지는 것은?","options":["값의 개수","최댓값","최솟값"],"a":1,"why":"유난히 큰 값이 생기면 최댓값이 그 값으로 바뀝니다."}],"decks":[{"label":"강의 슬라이드","id":"rs05","n":36}]},{"n":5,"title":"신호의 흔들림","concepts":"분산, 표준편차. 안정 신호와 불안정 신호의 차이","practice":"신호의 흔들림 크기 비교 실습","funcs":["np.var()","np.std()"],"goals":["분산과 표준편차의 의미를 설명할 수 있다.","안정 신호와 불안정 신호의 차이를 숫자로 비교할 수 있다."],"reflect":"평균이 같아도 표준편차가 다르면 왜 문제가 될 수 있을까요?","check":["분산과 표준편차의 의미를 말할 수 있다.","두 신호의 흔들림 크기를 비교할 수 있다.","평균이 같아도 흔들림은 다를 수 있음을 안다."],"quiz":[{"q":"두 센서의 평균이 같고 B의 표준편차가 더 큽니다. 맞는 해석은?","options":["B의 값이 더 크다","B가 더 많이 흔들린다","두 센서의 상태는 같다"],"a":1,"why":"표준편차는 값이 평균에서 얼마나 흩어져 있는지를 나타냅니다."},{"q":"분산보다 표준편차가 해석하기 쉬운 이유는?","options":["항상 0이어서","원래 신호와 단위가 같아서","평균과 값이 같아서"],"a":1,"why":"표준편차는 분산의 제곱근이라 원래 신호와 단위가 같습니다."}],"decks":[{"label":"강의 슬라이드","id":"rs05","n":36}]},{"n":6,"title":"랜덤 데이터와 잡음","concepts":"균등분포, 정규분포, 잡음의 종류(가우시안 잡음 중심)","practice":"난수 생성, 가우시안 잡음 신호 생성","goals":["균등분포와 정규분포의 차이를 설명할 수 있다.","난수를 생성할 수 있다.","신호에 가우시안 잡음을 더할 수 있다."],"reflect":"잡음의 세기를 키웠을 때 신호가 왜 그렇게 변했나요?","check":["균등분포와 정규분포를 구분할 수 있다.","난수를 생성할 수 있다.","가우시안 잡음 신호를 만들 수 있다."],"quiz":[{"q":"평균 근처에 값이 몰리는 종 모양 분포는?","options":["균등분포","정규분포"],"a":1,"why":"정규분포는 평균 근처에 값이 많고 멀어질수록 적어집니다."},{"q":"가우시안 잡음의 표준편차를 키우면?","options":["신호가 더 크게 흔들린다","신호가 더 또렷해진다","표본 수가 줄어든다"],"a":0,"why":"표준편차가 곧 잡음의 세기입니다."}]},{"n":7,"title":"신호 시각화","concepts":"시간축, 진폭, 히스토그램 개념","practice":"Matplotlib로 파형 그래프, 히스토그램 그리기","funcs":["plt.plot()","plt.hist()"],"goals":["시간축과 진폭으로 파형을 읽을 수 있다.","히스토그램이 보여 주는 것을 설명할 수 있다.","Matplotlib로 파형과 히스토그램을 그릴 수 있다."],"reflect":"같은 데이터를 파형과 히스토그램으로 그리면 각각 무엇이 보이나요?","check":["파형 그래프의 가로축과 세로축을 설명할 수 있다.","파형 그래프를 그릴 수 있다.","히스토그램을 그리고 해석할 수 있다."],"quiz":[{"q":"파형 그래프에서 세로축은 주로 무엇을 나타낼까요?","options":["시간","진폭","표본 번호"],"a":1,"why":"가로축은 시간, 세로축은 그 시각의 값(진폭)입니다."},{"q":"히스토그램이 보여 주는 것은?","options":["값의 시간 순서","각 구간에 값이 몇 개 있는지","주파수 성분"],"a":1,"why":"히스토그램은 값의 분포를 구간별 개수로 보여 줍니다."}]},{"n":8,"title":"중간평가","exam":true,"concepts":"개념 퀴즈 + 미니 실습 평가","practice":"잡음 생성, 히스토그램 작성 등 간단 실습 수행","goals":["1~7주의 개념을 설명할 수 있다.","잡음을 생성하고 히스토그램을 그릴 수 있다.","결과 그래프를 해석할 수 있다."],"check":["1~7주의 핵심 용어를 설명할 수 있다.","잡음 생성과 히스토그램 작성을 혼자 할 수 있다."]},{"n":9,"title":"신호 전처리","concepts":"정규화, 이동평균. 잡음 제거 원리","practice":"잡음 감소, 데이터 스케일 조정 실습","links":[{"label":"학생용 Colab","url":"https://colab.research.google.com/drive/1ZtHNkJCgIknCnNDCNmGDUANEGOstVtC9"}],"goals":["정규화로 데이터의 범위를 맞출 수 있다.","이동평균으로 잡음이 줄어드는 원리를 설명할 수 있다.","창 크기에 따른 잡음 감소와 왜곡을 비교할 수 있다."],"reflect":"이동평균의 창 크기를 키우면 그래프가 왜 그렇게 달라지나요?","check":["정규화의 목적을 말할 수 있다.","이동평균으로 잡음을 줄일 수 있다.","창이 너무 크면 신호가 왜곡됨을 안다."],"quiz":[{"q":"온도 18~30 범위에서 24를 최소-최대 정규화한 값은?","options":["0.24","0.50","0.80"],"a":1,"why":"(24 - 18) ÷ (30 - 18) = 0.50입니다."},{"q":"이동평균의 창을 너무 크게 하면?","options":["원래 신호 모양도 뭉개질 수 있다","잡음이 더 커진다","표본 수가 늘어난다"],"a":0,"why":"많은 값을 묶어 평균 내면 신호의 변화까지 평평해집니다."}],"decks":[{"label":"강의 슬라이드","id":"rs09","n":25}]},{"n":10,"title":"변수 간 관계","concepts":"공분산, 교차상관, 자기상관함수 개념. 랜덤신호의 시간적 의존성","practice":"신호의 자기상관·교차상관 계산 및 비교 실습 (잡음 vs 주기신호)","goals":["공분산과 상관의 의미를 설명할 수 있다.","자기상관과 교차상관의 차이를 설명할 수 있다.","잡음과 주기신호의 자기상관을 비교할 수 있다."],"reflect":"잡음과 주기신호의 자기상관 그래프는 왜 다르게 나오나요?","check":["공분산과 상관의 의미를 말할 수 있다.","자기상관과 교차상관을 구분할 수 있다.","잡음과 주기신호의 자기상관 차이를 설명할 수 있다."],"quiz":[{"q":"자기상관은 무엇을 비교할까요?","options":["신호와 시간을 밀어 놓은 자기 자신","서로 다른 두 신호","신호와 그 평균"],"a":0,"why":"다른 신호와 비교하는 것은 교차상관입니다."},{"q":"주기신호의 자기상관은 어떤 모양일까요?","options":["주기에 맞춰 반복된다","지연 0에서만 크고 나머지는 0 근처이다","항상 0이다"],"a":0,"why":"한 주기만큼 밀면 다시 겹치기 때문입니다. 지연 0에서만 큰 것은 화이트 잡음의 특징입니다."}]},{"n":11,"title":"랜덤신호 주파수 분석","concepts":"스펙트럼, 전력스펙트럼밀도(PSD) 직관적 설명. 푸리에 개념 소개(수식 최소화)","practice":"FFT를 이용한 신호 스펙트럼 관찰, 화이트 잡음 스펙트럼 시각화","funcs":["np.fft.fft()"],"goals":["스펙트럼이 보여 주는 것을 설명할 수 있다.","PSD의 의미를 직관적으로 설명할 수 있다.","FFT로 신호와 화이트 잡음의 스펙트럼을 관찰할 수 있다."],"reflect":"사인파와 화이트 잡음의 스펙트럼은 왜 다르게 나오나요?","check":["스펙트럼의 피크가 뜻하는 것을 말할 수 있다.","PSD의 의미를 직관적으로 설명할 수 있다.","화이트 잡음의 스펙트럼 모양을 설명할 수 있다."],"quiz":[{"q":"2Hz와 10Hz를 섞은 신호의 스펙트럼에서 피크는 어디에 보일까요?","options":["2와 10 근처","12 근처 한 곳","8 근처"],"a":0,"why":"피크의 위치가 신호에 들어 있는 주파수입니다."},{"q":"화이트 잡음의 스펙트럼은 어떤 모양일까요?","options":["한 주파수에만 뾰족하다","전체 주파수에 대체로 고르게 퍼져 있다","낮은 주파수에만 있다"],"a":1,"why":"화이트 잡음은 전력이 전체 주파수에 고르게 퍼져 있습니다."}]},{"n":12,"title":"랜덤신호 응용1: 머신러닝 기본 원리","concepts":"특징, 정답, 학습, 예측. 훈련/테스트 데이터 분리 개념","practice":"신호 데이터에서 특징 추출 실습, 데이터 분리","funcs":["train_test_split"],"goals":["특징, 정답, 학습, 예측의 의미를 설명할 수 있다.","신호 데이터에서 특징을 추출할 수 있다.","훈련 데이터와 테스트 데이터를 분리할 수 있다."],"reflect":"훈련 데이터와 테스트 데이터를 나누지 않으면 왜 문제가 될까요?","check":["특징과 정답의 의미를 말할 수 있다.","신호에서 특징을 추출할 수 있다.","데이터를 훈련용과 테스트용으로 나눌 수 있다."],"quiz":[{"q":"60개 데이터를 test_size=0.3으로 나누면 테스트 데이터는 몇 개일까요?","options":["18개","30개","42개"],"a":0,"why":"60 × 0.3 = 18개입니다."},{"q":"신호의 평균과 표준편차를 모델의 입력으로 쓴다면, 이것은 무엇일까요?","options":["특징","정답","테스트 데이터"],"a":0,"why":"모델이 보고 판단하는 입력값이 특징입니다."}]},{"n":13,"title":"랜덤신호 응용2: 회귀와 분류","concepts":"연속값 예측(회귀), 범주 예측(분류)","practice":"온도에 따른 전력량 회귀 예측, KNN을 이용한 신호 정상/이상 분류","funcs":["LinearRegression","KNeighborsClassifier"],"goals":["회귀와 분류의 차이를 설명할 수 있다.","온도로 전력량을 예측할 수 있다.","KNN으로 신호의 정상/이상을 분류할 수 있다."],"reflect":"예측이나 분류 결과가 틀린 데이터는 왜 틀렸을까요?","check":["회귀와 분류를 구분할 수 있다.","회귀로 전력량을 예측할 수 있다.","KNN으로 정상/이상 신호를 분류할 수 있다."],"quiz":[{"q":"다음 중 회귀 문제는?","options":["정상과 이상 신호 구분","온도로 전력량 예측","불량품 여부 판정"],"a":1,"why":"회귀는 연속적인 숫자를 예측합니다. 범주를 맞히는 것은 분류입니다."},{"q":"KNN은 새 데이터를 어떻게 분류할까요?","options":["가장 가까운 이웃들의 범주를 본다","항상 첫 번째 범주로 정한다","평균값으로 정한다"],"a":0,"why":"K개의 가까운 이웃을 보고 범주를 정합니다."}]}]},{"id":"robot-vision","title":"로봇비전","subtitle":"인공지능 시스템의 구성과 딥러닝 응용을 프로그램으로 익힙니다","overview":"인공 지능을 이용한 시스템의 구성과 데이터 훈련 및 딥러닝의 다양한 응용 분야에 대하여 학습합니다. 인공지능의 정의와 구현 방법 및 응용에 대한 개념을 이해하고 프로그램을 구현할 수 있어야 합니다.","meta":[["학년·이수구분","4학년 / 전공선택 / 2학점"],["수업 시간","월 13·14교시 (인천 612)"],["담당 교수","김선숙"],["면담","14:00 ~ 15:00, 인천 914"],["수업 방법","강의 및 프로그램 작성과 결과 분석"],["주교재","딥러닝 EXPRESS (천인국, 생능출판사)"],["수강 유의사항","프로그램 작성의 기본 개념이 있어야 하며, 적어도 파이선이나 C 언어 프로그래밍 경험이 있어야 합니다."]],"objectives":["인공지능의 정의와 구현 방법을 이해한다.","인공지능의 응용에 대한 개념을 이해한다.","인공지능 프로그램을 구현할 수 있다."],"grading":[["출석","10%",""],["중간평가","30%","지필평가"],["기말평가","40%","지필"],["과제","20%","레포트 (주차별 서머리 및 과제)"]],"weeks":[{"n":1,"title":"인공지능의 정의","concepts":"인공지능에 대한 정의","practice":"주차별 서머리 및 과제","goals":["인공지능의 정의를 이해한다."],"reflect":"주변에서 인공지능이 쓰이는 예를 하나 들고, 왜 인공지능이라고 볼 수 있는지 적어 보세요.","check":["인공지능의 정의를 말할 수 있다.","인공지능의 응용 사례를 들 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"인공지능, 머신러닝, 딥러닝의 관계로 맞는 것은?","options":["딥러닝 ⊂ 머신러닝 ⊂ 인공지능","인공지능 ⊂ 딥러닝 ⊂ 머신러닝","셋은 서로 관계가 없다"],"a":0,"why":"머신러닝은 인공지능의 한 분야이고, 딥러닝은 머신러닝의 한 분야입니다."},{"q":"머신러닝의 특징으로 맞는 것은?","options":["사람이 모든 규칙을 직접 코딩한다","데이터에서 규칙을 학습한다","데이터가 필요 없다"],"a":1,"why":"머신러닝은 데이터로부터 규칙을 스스로 찾습니다."}],"decks":[{"label":"강의 슬라이드","id":"rv01","n":23}]},{"n":2,"title":"파이선과 넘파이 소개","concepts":"파이선과 넘파이 소개","practice":"주차별 서머리 및 과제","funcs":["np.array()"],"goals":["파이선의 기본 사용법을 익힌다.","넘파이 배열을 다룰 수 있다."],"reflect":"딥러닝 프로그램에서 넘파이 배열을 쓰는 이유는 무엇일까요?","check":["파이선 코드를 실행할 수 있다.","넘파이 배열을 만들고 연산할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"np.array([1, 2, 3]) * 2의 결과는?","options":["[1, 2, 3, 1, 2, 3]","[2 4 6]","오류"],"a":1,"why":"넘파이 배열은 각 원소에 연산이 적용됩니다."},{"q":"np.array([[1, 2], [3, 4]]).shape의 값은?","options":["(2, 2)","(4,)","(1, 4)"],"a":0,"why":"2행 2열 배열입니다."}],"decks":[{"label":"강의 슬라이드","id":"rv02","n":53}]},{"n":3,"title":"머신러닝의 기초","concepts":"머신러닝의 기초","practice":"주차별 서머리 및 과제","funcs":["train_test_split","KNeighborsClassifier"],"links":[{"label":"붓꽃 데이터 분류 KNN Colab","url":"https://colab.research.google.com/drive/1l5eyGAUv8HbQPGhrnqDkd9LpDQn5BfZ0"}],"goals":["머신러닝의 기본 개념을 설명할 수 있다.","학습 데이터와 테스트 데이터를 나눌 수 있다."],"reflect":"KNN에서 이웃 수를 바꾸면 결과가 왜 달라질까요?","check":["지도학습과 비지도학습을 구분할 수 있다.","데이터를 학습용과 테스트용으로 나눌 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"정답이 있는 데이터로 학습하는 방식은?","options":["지도학습","비지도학습","강화학습"],"a":0,"why":"지도학습은 입력과 정답의 쌍으로 학습합니다."},{"q":"테스트 데이터를 따로 두는 이유는?","options":["학습을 빠르게 하려고","처음 보는 데이터에 대한 성능을 확인하려고","데이터를 늘리려고"],"a":1,"why":"학습에 쓰지 않은 데이터로 평가해야 실제 성능을 알 수 있습니다."}],"decks":[{"label":"머신러닝의 기초","id":"rv03a","n":63},{"label":"K-최근접 이웃","id":"rv03b","n":31}]},{"n":4,"title":"선형 회귀","concepts":"선형 회귀 알고리즘","practice":"주차별 서머리 및 과제","funcs":["LinearRegression"],"links":[{"label":"회귀 Colab","url":"https://colab.research.google.com/drive/10T1EEnmEQ_pEAZ_Ah1LH_FQ24lCpg21b"}],"goals":["선형 회귀 알고리즘을 이해한다.","오차를 줄이도록 직선을 찾는 과정을 설명할 수 있다."],"reflect":"학습이 진행되면서 오차는 어떻게 변했고, 그 이유는 무엇일까요?","check":["선형 회귀가 무엇을 예측하는지 말할 수 있다.","오차의 의미를 설명할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"y = wx + b에서 학습으로 찾는 값은?","options":["x와 y","w와 b","y만"],"a":1,"why":"입력과 정답은 데이터로 주어지고, 모델은 기울기 w와 절편 b를 찾습니다."},{"q":"선형 회귀로 풀기에 알맞은 문제는?","options":["면적으로 집값 예측","사진 속 동물 종류 구분","메일의 스팸 여부 판정"],"a":0,"why":"회귀는 연속적인 값을 예측합니다."}],"decks":[{"label":"강의 슬라이드","id":"rv04","n":88}]},{"n":5,"title":"퍼셉트론","concepts":"퍼셉트론","practice":"주차별 서머리 및 과제","links":[{"label":"AND·OR Colab","url":"https://colab.research.google.com/drive/1u14_5fujiN5cskW_AoD4qr4OGtkq2JQH"}],"goals":["퍼셉트론의 작동 원리를 이해한다.","퍼셉트론 학습 알고리즘을 이해한다.","퍼셉트론의 한계점을 인식한다."],"reflect":"단층 퍼셉트론으로 AND와 OR은 되는데 XOR이 안 되는 이유는 무엇일까요?","check":["입력, 가중치, 출력의 관계를 설명할 수 있다.","AND와 OR을 퍼셉트론으로 구현할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"단층 퍼셉트론으로 풀 수 없는 문제는?","options":["AND","OR","XOR"],"a":2,"why":"XOR은 직선 하나로 나눌 수 없습니다."},{"q":"퍼셉트론 학습에서 조정하는 값은?","options":["입력 데이터","가중치와 바이어스","정답"],"a":1,"why":"오차를 줄이도록 가중치와 바이어스를 바꿉니다."}],"decks":[{"label":"강의 슬라이드","id":"rv05","n":39}]},{"n":6,"title":"다층 퍼셉트론","concepts":"다층 퍼셉트론","practice":"주차별 서머리 및 과제","links":[{"label":"XOR 다층 퍼셉트론 Colab","url":"https://colab.research.google.com/drive/1GQGUftYWuFRuCeKC6bzsC-WaAWgxm0tY"}],"goals":["다층 퍼셉트론의 구조를 설명할 수 있다.","은닉층이 XOR 문제를 푸는 원리를 이해한다.","오차역전파의 역할을 이해한다."],"reflect":"은닉층을 추가하면 XOR을 풀 수 있는 이유는 무엇일까요?","check":["입력층, 은닉층, 출력층을 구분할 수 있다.","XOR을 다층 퍼셉트론으로 구현할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"오차역전파의 역할은?","options":["오차를 이용해 각 층의 가중치를 개선한다","입력 데이터를 늘린다","은닉층을 없앤다"],"a":0,"why":"출력의 오차를 뒤쪽 층부터 앞쪽 층으로 전달해 가중치를 고칩니다."},{"q":"다층 퍼셉트론에서 입력층과 출력층 사이의 층은?","options":["은닉층","합성곱층","풀링층"],"a":0,"why":"입력층과 출력층 사이의 층을 은닉층이라고 합니다."}],"decks":[{"label":"강의 슬라이드","id":"rv06","n":58}]},{"n":7,"title":"다층 퍼셉트론과 케라스","concepts":"다층 퍼셉트론과 케라스 라이브러리","practice":"주차별 서머리 및 과제","funcs":["Sequential","Dense","model.compile()","model.fit()"],"goals":["케라스로 신경망을 구성할 수 있다.","모델을 컴파일하고 학습시킬 수 있다."],"reflect":"층의 수나 뉴런 수를 바꾸면 정확도가 어떻게 달라지나요?","check":["Sequential과 Dense로 모델을 만들 수 있다.","compile과 fit의 역할을 말할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"케라스에서 실제 학습을 실행하는 함수는?","options":["model.compile()","model.fit()","model.summary()"],"a":1,"why":"compile은 학습 방법을 설정하고, fit이 학습을 실행합니다."},{"q":"Dense 층의 특징은?","options":["이전 층의 모든 뉴런과 연결된다","이미지 전용이다","가중치가 없다"],"a":0,"why":"Dense는 완전 연결층입니다."}]},{"n":8,"title":"중간평가","exam":true,"concepts":"1~7주 내용","practice":"지필평가 (평가 비율 30%)","goals":["1~7주의 개념을 정리한다."],"check":["인공지능과 머신러닝의 기초를 설명할 수 있다.","선형 회귀와 퍼셉트론의 원리를 설명할 수 있다.","다층 퍼셉트론과 케라스를 설명할 수 있다."]},{"n":9,"title":"심층 신경망","concepts":"심층 신경망","practice":"주차별 서머리 및 과제","goals":["심층 신경망의 구조와 특징을 이해한다.","층이 깊어질 때 생기는 문제를 설명할 수 있다."],"reflect":"은닉층이 깊어지면 무엇이 좋아지고, 어떤 문제가 생기나요?","check":["심층 신경망의 의미를 말할 수 있다.","기울기 소실을 설명할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"층이 깊어질수록 앞쪽 층까지 오차 정보가 잘 전달되지 않는 현상은?","options":["기울기 소실","과소 표본","데이터 증강"],"a":0,"why":"역전파 과정에서 기울기가 점점 작아지는 현상입니다."},{"q":"기울기 소실을 줄이기 위해 은닉층에 많이 쓰는 활성화 함수는?","options":["ReLU","계단 함수","항등 함수"],"a":0,"why":"ReLU는 양수 구간에서 기울기가 1로 유지됩니다."}]},{"n":10,"title":"컨벌루션 신경망","concepts":"컨벌루션 신경망","practice":"주차별 서머리 및 과제","funcs":["Conv2D","MaxPooling2D"],"goals":["컨벌루션과 풀링의 역할을 이해한다.","CNN의 구조를 설명할 수 있다."],"reflect":"영상 처리에 완전 연결 신경망보다 CNN이 유리한 이유는 무엇일까요?","check":["컨벌루션 층의 역할을 말할 수 있다.","풀링 층의 역할을 말할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"컨벌루션 층의 주된 역할은?","options":["필터로 영상의 특징을 추출한다","데이터를 삭제한다","정답을 만든다"],"a":0,"why":"필터가 영상을 훑으며 특징 맵을 만듭니다."},{"q":"풀링 층의 주된 역할은?","options":["특징 맵의 크기를 줄인다","영상을 키운다","가중치를 늘린다"],"a":0,"why":"풀링은 특징을 요약하며 크기를 줄입니다."}]},{"n":11,"title":"영상 인식","concepts":"영상 인식","practice":"주차별 서머리 및 과제","goals":["영상 인식의 원리를 이해한다.","신경망으로 영상을 분류하는 과정을 설명할 수 있다."],"reflect":"모델이 잘못 인식한 영상은 왜 틀렸을까요?","check":["영상 분류의 입력과 출력을 설명할 수 있다.","영상 인식의 응용 사례를 들 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"여러 범주 중 하나로 영상을 분류할 때 출력층에 흔히 쓰는 활성화 함수는?","options":["softmax","ReLU","항등 함수"],"a":0,"why":"softmax는 각 범주의 확률을 출력합니다."},{"q":"이미 학습된 모델을 새 문제에 활용하는 방법은?","options":["전이학습","정규화","역전파"],"a":0,"why":"전이학습은 적은 데이터로도 좋은 성능을 내는 데 도움이 됩니다."}]},{"n":12,"title":"순환 신경망","concepts":"순환 신경망","practice":"주차별 서머리 및 과제","goals":["순환 신경망의 구조를 이해한다.","순서가 있는 데이터를 다루는 방법을 설명할 수 있다."],"reflect":"순서가 있는 데이터에 왜 순환 구조가 필요할까요?","check":["순환 신경망의 은닉 상태를 설명할 수 있다.","순환 신경망이 알맞은 데이터를 들 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"순환 신경망에 가장 알맞은 데이터는?","options":["주가 같은 시계열","순서와 관계없는 표 한 행","흑백 사진 한 장"],"a":0,"why":"순환 신경망은 순서가 있는 데이터를 처리합니다."},{"q":"순환 신경망이 이전 시점의 정보를 전달하는 수단은?","options":["은닉 상태","풀링","드롭아웃"],"a":0,"why":"은닉 상태가 이전 정보를 다음 시점으로 넘깁니다."}]},{"n":13,"title":"자연어 처리","concepts":"자연어 처리","practice":"주차별 서머리 및 과제","goals":["자연어 처리의 기본 과정을 이해한다."],"reflect":"컴퓨터가 단어를 숫자로 바꾸어 다뤄야 하는 이유는 무엇일까요?","check":["토큰화의 의미를 말할 수 있다.","단어 임베딩의 의미를 말할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"문장을 단어 같은 작은 단위로 나누는 과정은?","options":["토큰화","풀링","역전파"],"a":0,"why":"자연어 처리의 첫 단계 중 하나입니다."},{"q":"단어를 의미가 반영된 숫자 벡터로 나타내는 방법은?","options":["단어 임베딩","이진 분류","정규화"],"a":0,"why":"의미가 비슷한 단어는 가까운 벡터가 되도록 학습합니다."}]},{"n":14,"title":"강화학습과 생성 모델","concepts":"강화학습, 생성 모델","practice":"주차별 서머리 및 과제","goals":["강화학습의 기본 개념을 이해한다.","생성 모델의 개념을 이해한다."],"reflect":"강화학습과 지도학습은 학습에 쓰는 정보가 어떻게 다른가요?","check":["에이전트, 환경, 행동, 보상을 설명할 수 있다.","생성 모델이 하는 일을 설명할 수 있다.","주차별 서머리와 과제를 제출했다."],"quiz":[{"q":"강화학습에서 에이전트의 목표는?","options":["누적 보상을 최대화한다","정답 레이블을 외운다","데이터를 줄인다"],"a":0,"why":"에이전트는 보상을 많이 받는 행동을 학습합니다."},{"q":"GAN에서 진짜와 가짜를 구별하는 쪽은?","options":["판별자","생성자","에이전트"],"a":0,"why":"생성자는 가짜를 만들고, 판별자는 진짜와 가짜를 구별합니다."}]},{"n":15,"title":"기말고사","exam":true,"concepts":"기말고사","practice":"지필 (평가 비율 40%)","goals":["9~14주를 중심으로 전체 내용을 정리한다."],"check":["심층 신경망과 CNN을 설명할 수 있다.","영상 인식과 순환 신경망을 설명할 수 있다.","자연어 처리, 강화학습, 생성 모델을 설명할 수 있다."]}]},{"id":"electromagnetics","title":"전기자기학","subtitle":"벡터와 정전계에서 맥스웰 방정식, 전자파와 안테나까지","overview":"벡터 해석을 바탕으로 정전계와 정자계를 익히고, 시간에 따라 변하는 전자계와 맥스웰 방정식을 거쳐 전자파의 전파, 전송선로, 도파관과 안테나까지 학습합니다.","weeks":[{"n":1,"title":"전기자기학 소개","concepts":"전기자기학 수업 소개, 전자기학의 응용분야","goals":["전기자기학 수업 내용을 이해한다.","전자기학의 응용분야를 설명할 수 있다."],"check":["전기자기학이 다루는 내용을 말할 수 있다.","전자기학의 응용분야를 들 수 있다."],"quiz":[{"q":"전자기파를 직접 이용하는 기술은?","options":["휴대전화 통신","톱니바퀴 변속","수압 펌프"],"a":0,"why":"휴대전화는 전자기파로 신호를 주고받습니다."},{"q":"진공에서 전자기파의 속도는 약 얼마일까요?","options":["340 m/s","3×10⁸ m/s","3×10⁴ m/s"],"a":1,"why":"진공에서 전자기파는 빛의 속도로 전파됩니다."}],"decks":[{"label":"1차시","id":"em011","n":42},{"label":"2차시","id":"em012","n":23}]},{"n":2,"title":"벡터 연산","concepts":"벡터, 벡터의 덧셈·뺄셈, 점곱, 가위곱, 좌표계","goals":["스칼라와 벡터를 구분할 수 있다.","벡터의 기본 연산을 수행할 수 있다.","점곱과 가위곱을 계산할 수 있다."],"check":["스칼라와 벡터의 차이를 말할 수 있다.","벡터의 덧셈과 뺄셈을 할 수 있다.","점곱과 가위곱을 구분할 수 있다."],"quiz":[{"q":"다음 중 벡터량은?","options":["온도","전하","전기장"],"a":2,"why":"전기장은 크기와 방향을 함께 갖습니다."},{"q":"두 벡터의 점곱 결과는?","options":["스칼라","벡터","행렬"],"a":0,"why":"A·B = |A||B|cosθ로 스칼라입니다."}],"decks":[{"label":"1차시","id":"em021","n":17},{"label":"2차시","id":"em022","n":20}]},{"n":3,"title":"쿨롱의 법칙과 전계의 세기","concepts":"쿨롱의 법칙, 전계, 전속밀도","goals":["쿨롱의 법칙으로 전하 사이의 힘을 구할 수 있다.","전계와 전속밀도의 의미를 설명할 수 있다."],"check":["쿨롱의 법칙을 설명할 수 있다.","전계의 세기를 구할 수 있다.","전속밀도의 의미를 말할 수 있다."],"quiz":[{"q":"두 점전하 사이의 거리가 2배가 되면 힘은?","options":["2배","1/2배","1/4배"],"a":2,"why":"쿨롱 힘은 거리의 제곱에 반비례합니다."},{"q":"전계의 세기 단위는?","options":["V/m","A/m","Wb"],"a":0,"why":"전계의 세기는 V/m 또는 N/C로 나타냅니다."}],"decks":[{"label":"1차시","id":"em031","n":14},{"label":"2차시","id":"em032","n":23}]},{"n":4,"title":"전계에 의한 가우스 법칙","concepts":"가우스 법칙, 가우스 법칙의 응용","goals":["가우스 법칙을 설명할 수 있다.","대칭 전하 분포의 전계를 가우스 법칙으로 구할 수 있다."],"check":["가우스 법칙을 설명할 수 있다.","가우스 면을 정할 수 있다.","구, 무한 선전하, 무한 평면의 전계를 구할 수 있다."],"quiz":[{"q":"폐곡면을 지나는 전체 전속은 무엇과 같을까요?","options":["폐곡면 안의 전체 전하","폐곡면의 넓이","폐곡면 밖의 전하"],"a":0,"why":"가우스 법칙의 내용입니다."},{"q":"무한 선전하 주위의 전계에 알맞은 가우스 면은?","options":["원통","정육면체","평면 한 장"],"a":0,"why":"선전하의 원통 대칭에 맞는 면을 고릅니다."}],"decks":[{"label":"1차시","id":"em041","n":20},{"label":"2차시","id":"em042","n":11}]},{"n":5,"title":"에너지와 준위","concepts":"전계의 세기, 전위차, 전위장","goals":["전계에서 전하를 옮기는 일을 설명할 수 있다.","전위차와 전위장을 구할 수 있다."],"check":["전계 내 전하 이동에 필요한 일을 설명할 수 있다.","전위차의 의미를 말할 수 있다.","전위장을 설명할 수 있다."],"quiz":[{"q":"전위차의 단위는?","options":["V","A","F"],"a":0,"why":"전위차의 단위는 볼트(J/C)입니다."},{"q":"정전계에서 두 점 사이의 전위차는 경로에 따라 어떻게 될까요?","options":["경로와 무관하다","경로가 길수록 커진다","항상 0이다"],"a":0,"why":"정전계는 보존장입니다."}],"decks":[{"label":"1차시","id":"em051","n":16},{"label":"2차시","id":"em052","n":23}]},{"n":6,"title":"물질 공간에서의 전기장","concepts":"물질의 성질과 전류, 도체, 유전체","goals":["물질의 성질과 전류를 설명할 수 있다.","도체와 유전체의 특성을 비교할 수 있다."],"check":["전류와 전류밀도를 설명할 수 있다.","도체의 성질을 말할 수 있다.","유전체의 분극을 설명할 수 있다."],"quiz":[{"q":"정전 평형 상태인 도체 내부의 전계는?","options":["0","무한대","표면과 같다"],"a":0,"why":"전하가 표면으로 이동해 내부 전계가 0이 됩니다."},{"q":"유전체에 전계를 가했을 때 일어나는 현상은?","options":["분극","자화","초전도"],"a":0,"why":"유전체 안의 전하가 약간씩 변위해 분극됩니다."}],"decks":[{"label":"1차시","id":"em061","n":10},{"label":"2차시","id":"em062","n":33}]},{"n":7,"title":"정전용량","concepts":"정전용량, 정전용량의 여러 가지 예","goals":["정전용량을 정의할 수 있다.","평행판 커패시터 등의 정전용량을 구할 수 있다."],"check":["정전용량의 정의를 말할 수 있다.","평행판 커패시터의 용량을 구할 수 있다."],"quiz":[{"q":"정전용량의 정의는?","options":["C = Q/V","C = V/Q","C = QV"],"a":0,"why":"단위 전압당 저장되는 전하량입니다."},{"q":"평행판 커패시터의 판 간격을 2배로 하면 용량은?","options":["2배","1/2배","4배"],"a":1,"why":"C = εS/d이므로 간격에 반비례합니다."}],"decks":[{"label":"1차시","id":"em071","n":9},{"label":"2차시","id":"em072","n":18}]},{"n":8,"title":"중간고사","exam":true,"concepts":"1~7주 내용","goals":["1~7주의 내용을 정리한다."],"check":["벡터 연산과 쿨롱의 법칙을 설명할 수 있다.","가우스 법칙과 전위를 설명할 수 있다.","도체, 유전체, 정전용량을 설명할 수 있다."]},{"n":9,"title":"정상자계","concepts":"비오-사바르 법칙, 암페어의 주회법칙","goals":["비오-사바르 법칙으로 자계를 구할 수 있다.","암페어의 주회법칙을 적용할 수 있다."],"check":["비오-사바르 법칙을 설명할 수 있다.","암페어의 주회법칙을 설명할 수 있다."],"quiz":[{"q":"정상자계를 만드는 원인은?","options":["일정한 전류","정지한 전하","전압만"],"a":0,"why":"일정하게 흐르는 전류가 정상자계를 만듭니다."},{"q":"암페어의 주회법칙에서 H의 폐경로 적분은 무엇과 같을까요?","options":["경로가 둘러싼 전류","경로의 길이","경로 밖의 전류"],"a":0,"why":"폐경로가 둘러싼 전체 전류와 같습니다."}],"decks":[{"label":"1차시","id":"em081","n":15},{"label":"2차시","id":"em082","n":18}]},{"n":10,"title":"자기력과 자성체","concepts":"자속과 자속밀도, 인덕턴스","goals":["자속과 자속밀도를 설명할 수 있다.","자계 안의 전하가 받는 힘을 구할 수 있다.","인덕턴스의 의미를 설명할 수 있다."],"check":["자속과 자속밀도를 구분할 수 있다.","자기력을 설명할 수 있다.","인덕턴스의 의미를 말할 수 있다."],"quiz":[{"q":"자속밀도의 단위는?","options":["T (Wb/m²)","F","Ω"],"a":0,"why":"자속밀도의 단위는 테슬라입니다."},{"q":"인덕턴스의 단위는?","options":["H","F","V"],"a":0,"why":"인덕턴스의 단위는 헨리입니다."}],"decks":[{"label":"1차시","id":"em091","n":26},{"label":"2차시","id":"em092","n":29}]},{"n":11,"title":"시간에 따라 변하는 전자계","concepts":"패러데이 법칙, 맥스웰 방정식","goals":["패러데이 법칙을 설명할 수 있다.","변위전류와 맥스웰 방정식을 이해한다."],"check":["패러데이 법칙을 설명할 수 있다.","변위전류의 의미를 말할 수 있다.","맥스웰 방정식 네 식의 의미를 설명할 수 있다."],"quiz":[{"q":"패러데이 법칙에서 유도기전력이 생기는 조건은?","options":["쇄교 자속의 시간 변화","일정한 자속","일정한 전하"],"a":0,"why":"자속이 시간에 따라 변할 때 기전력이 유도됩니다."},{"q":"맥스웰이 암페어 법칙에 추가한 항은?","options":["변위전류","저항","자기 단극"],"a":0,"why":"시간에 따라 변하는 전계도 자계를 만듭니다."}],"decks":[{"label":"1차시","id":"em101","n":22},{"label":"2차시","id":"em102","n":13}]},{"n":12,"title":"전자파의 전파","concepts":"전자기파의 전파, 전송선로의 해석","goals":["전자기파가 전파되는 원리를 설명할 수 있다.","전송선로를 해석할 수 있다."],"check":["평면파의 특징을 말할 수 있다.","매질에 따른 전파의 차이를 설명할 수 있다.","전송선로의 기본 개념을 설명할 수 있다."],"quiz":[{"q":"자유공간 평면파에서 전계와 자계의 방향은?","options":["서로 수직이고 진행 방향과도 수직","서로 평행","진행 방향과 평행"],"a":0,"why":"평면파는 전계, 자계, 진행 방향이 서로 수직입니다."},{"q":"전송선로에 특성임피던스와 같은 부하를 연결하면 반사는?","options":["없다","전부 반사된다","두 배가 된다"],"a":0,"why":"정합되면 반사가 생기지 않습니다."}],"decks":[{"label":"1차시","id":"em111","n":37},{"label":"2차시","id":"em112","n":61}]},{"n":13,"title":"안테나와 전자기파 응용","concepts":"도파관, 안테나와 전자기파 응용","goals":["도파관의 원리를 이해한다.","안테나의 역할과 전자기파 응용을 설명할 수 있다."],"check":["도파관의 원리를 말할 수 있다.","안테나의 역할을 말할 수 있다.","전자기파 응용 사례를 들 수 있다."],"quiz":[{"q":"도파관에서 차단주파수보다 낮은 주파수의 전자파는?","options":["전파되지 못한다","더 빠르게 전파된다","증폭된다"],"a":0,"why":"차단주파수보다 높은 주파수만 전파됩니다."},{"q":"안테나의 역할은?","options":["선로의 전자파와 자유공간의 전자파를 변환한다","직류를 저장한다","저항을 없앤다"],"a":0,"why":"안테나는 전자파를 공간으로 방사하거나 공간에서 받습니다."}],"decks":[{"label":"1차시","id":"em121","n":23},{"label":"2차시","id":"em122","n":49}]},{"n":14,"title":"기말고사","exam":true,"concepts":"강의자료 8~12번 내용","goals":["중간고사 이후의 내용을 정리한다."],"check":["정상자계와 자기력을 설명할 수 있다.","패러데이 법칙과 맥스웰 방정식을 설명할 수 있다.","전자파, 전송선로, 도파관, 안테나를 설명할 수 있다."]}]}]}</script>
+<script type="application/json" id="notebooks-data">{}</script>
+<script id="app-code">
+(function(){
+"use strict";
+document.documentElement.lang="ko";
+var app=document.getElementById("app");
+var state=JSON.parse(document.getElementById("courses-data").textContent);
+var notebooks=JSON.parse(document.getElementById("notebooks-data").textContent);
+var KEY="online-classroom-progress-v1";
+var progress={};
+try{progress=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+function saveProgress(){try{localStorage.setItem(KEY,JSON.stringify(progress))}catch(e){}}
+var teacher=false,canManage=false,caps={artifact:null,downloads:null};
+var view={course:null,week:1,tab:"weeks",sec:"content",deck:0,page:{}},chunks={},msg=null,confirmDelete=false,answers={};
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function course(){return state.courses.find(function(c){return c.id===view.course})||null}
+function weekOf(c){return c.weeks.find(function(w){return w.n===view.week})||c.weeks[0]}
+function checksOf(w){return w.check&&w.check.length?w.check:["이번 주 학습을 마쳤다."]}
+function prog(c){return progress[c.id]||(progress[c.id]={})}
+function ratio(c,w){var p=prog(c),l=checksOf(w),d=0;l.forEach(function(_,i){if(p["w"+w.n+":"+i])d++});return d/l.length}
+function courseRatio(c){if(!c.weeks.length)return 0;return c.weeks.reduce(function(a,w){return a+ratio(c,w)},0)/c.weeks.length}
+function nextWeek(c){return c.weeks.find(function(w){return ratio(c,w)<1})||c.weeks[0]}
+function pct(x){return Math.round(x*100)+"%"}
+function safeUrl(u){return /^https:\/\/[^\s]+$/i.test(u||"")}
+
+/* A seeded sine-plus-noise trace, unique per course. */
+function trace(seed){
+  var h=0,i;for(i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;
+  var r=function(){h=(h*1664525+1013904223)>>>0;return h/4294967296-.5};
+  var f=3+h%4,d="";
+  for(i=0;i<=240;i++){var y=28-14*Math.sin(2*Math.PI*f*i/240)-14*r();d+=(i?"L":"M")+(i*2.5).toFixed(1)+" "+y.toFixed(1)}
+  return '<svg class="trace" viewBox="0 0 600 56" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="28" x2="600" y2="28"/><path d="'+d+'" vector-effect="non-scaling-stroke"/></svg>';
+}
+function notice(){return msg?'<div class="notice'+(msg.err?" err":"")+'" role="status">'+esc(msg.text)+"</div>":""}
+
+function renderHome(){
+  var cards=state.courses.map(function(c){
+    return '<button class="course-card" data-act="open" data-id="'+esc(c.id)+'">'+trace(c.id)
+      +"<b>"+esc(c.title)+'</b><span class="muted">'+esc(c.subtitle||"")+"</span>"
+      +'<span class="eyebrow">'+c.weeks.length+"개 주차 · 내 진도 "+pct(courseRatio(c))+"</span>"
+      +'<span class="muted">'+(courseRatio(c)>0?"이어서 학습: ":"시작하기: ")+nextWeek(c).n+"주차 "+esc(nextWeek(c).title)+"</span></button>";
+  }).join("");
+  var form=teacher?'<section class="sheet"><div class="stack"><h2>과목 추가</h2><p class="muted">저장하면 이 교실에 바로 게시되어, 링크를 가진 모든 사람에게 보입니다.</p></div>'
+    +'<form id="add-course"><label class="f">과목명<input type="text" id="c-title" required maxlength="80"></label>'
+    +'<label class="f">부제 또는 한 줄 소개<input type="text" id="c-sub" maxlength="120"></label>'
+    +'<label class="f">과목 개요<textarea id="c-over" style="font-family:var(--body);min-height:80px"></textarea></label>'
+    +'<label class="f">주차 계획<span class="hint">한 줄에 한 주씩 씁니다. 형식: 주제 | 핵심 개념 | 실습·활동. 시험 주차는 맨 앞에 *를 붙입니다.</span>'
+    +'<textarea id="c-weeks" required placeholder="AI의 이해 | 인공지능의 정의 | 생성형 AI 사용해 보기&#10;*중간평가 | 1~7주 종합 | 시험"></textarea></label>'
+    +'<div class="row"><button class="btn primary" type="submit">과목 게시</button></div></form></section>':"";
+  return '<header class="stack"><span class="eyebrow">ONLINE CLASSROOM</span><h1>'+esc(state.name)+'</h1><p class="muted">수강할 과목을 고르세요. 진도는 지금 쓰는 브라우저에 저장됩니다.</p></header>'
+    +notice()+'<section class="courses" aria-label="과목 목록">'+cards+"</section>"+form;
+}
+
+function renderPlot(c){
+  var stems=c.weeks.map(function(w){
+    var v=ratio(c,w),cls="stem"+(w.exam?" exam":"")+(v===0?" empty":"")+(view.tab==="weeks"&&w.n===view.week?" now":"");
+    return '<button class="'+cls+'" style="--v:'+v+'" data-act="week" data-n="'+w.n+'" aria-label="'+w.n+"주차 "+esc(w.title)+", 완료 "+pct(v)+'" title="'+w.n+"주차 "+esc(w.title)+'"><i></i></button>';
+  }).join("");
+  var axis=c.weeks.map(function(w){return"<span>"+w.n+"</span>"}).join("");
+  return '<section class="stack" aria-label="주차별 진도"><div class="top"><span class="eyebrow">주차별 진도 · 전체 '+pct(courseRatio(c))+'</span><div class="legend"><span>막대 높이 = 정리 항목 완료율</span><span>주황 = 평가 주차</span></div></div><div><div class="plot">'+stems+'</div><div class="axis">'+axis+"</div></div></section>";
+}
+
+function renderWeek(c){
+  var w=weekOf(c),p=prog(c);
+  var list=c.weeks.map(function(x){var r=ratio(c,x);
+    return '<li><button data-act="week" data-n="'+x.n+'"'+(x.n===w.n?' aria-current="true"':"")+'><span class="n">'+x.n+"</span><span>"+esc(x.title)+'</span><span class="state'+(r===1?" done":"")+'">'+(r===1?"완료":r>0?pct(r):"")+"</span></button></li>"}).join("");
+  var out='<div class="split"><nav class="weekcol" aria-label="주차 목록"><ol class="weeks">'+list+'</ol></nav><article class="sheet">';
+  out+='<div class="stack"><div class="row"><span class="eyebrow">WEEK '+String(w.n).padStart(2,"0")+"</span>"+(w.exam?'<span class="tag">평가 주차</span>':"")+"</div><h2>"+esc(w.title)+"</h2>";
+  if(w.concepts)out+='<p class="muted">'+esc(w.concepts)+"</p>";
+  out+="</div>";
+  out+='<div class="segs" role="tablist" aria-label="이번 주 학습">'+[["content","수업내용"],["quiz","확인문제"],["summary","오늘정리"]].map(function(s){
+    return '<button class="seg" role="tab" aria-selected="'+(view.sec===s[0])+'" data-act="sec" data-s="'+s[0]+'">'+s[1]+"</button>"}).join("")+"</div>";
+  if(view.sec==="quiz"){
+    out+=w.quiz&&w.quiz.length?'<section class="stack">'+w.quiz.map(function(q,i){return renderQ(w,q,i)}).join("")+"</section>":'<p class="muted">'+(w.exam?"평가 주차에는 확인문제가 없습니다.":"이번 주 확인문제는 준비 중입니다.")+"</p>";
+  }else if(view.sec==="summary"){
+    if(w.goals&&w.goals.length)out+='<section class="stack"><h3>이번 주 목표</h3><ol>'+w.goals.map(function(g){return"<li>"+esc(g)+"</li>"}).join("")+"</ol></section>";
+    out+='<section class="block"><h3>'+(w.exam?"자가 점검":"오늘 정리")+'</h3><ul class="checks">'+checksOf(w).map(function(t,i){
+      var id="ck-"+c.id+"-"+w.n+"-"+i;
+      return '<li><label for="'+id+'"><input type="checkbox" id="'+id+'" data-act="check" data-key="w'+w.n+":"+i+'"'+(p["w"+w.n+":"+i]?" checked":"")+"><span>"+esc(t)+"</span></label></li>"}).join("")+"</ul></section>";
+    if(w.reflect)out+='<section class="block"><h3>내 해석 (한 줄)</h3><p>'+esc(w.reflect)+"</p></section>";
+  }else{
+    if(w.note)out+='<div class="notice">'+esc(w.note)+"</div>";
+    out+=renderMaterials(c,w);
+    if(w.funcs&&w.funcs.length)out+='<section class="block"><h3>새로 쓰는 것</h3><div class="funcs">'+w.funcs.map(function(f){return"<code>"+esc(f)+"</code>"}).join("")+"</div></section>";
+    if(w.practice)out+='<section class="block"><h3>'+(w.exam?"평가 방식":"실습·과제")+"</h3><p>"+esc(w.practice)+"</p></section>";
+  }
+  var i=c.weeks.indexOf(w),prev=c.weeks[i-1],next=c.weeks[i+1];
+  out+='<div class="pager">'+(prev?'<button class="btn" data-act="week" data-n="'+prev.n+'">이전: '+prev.n+"주차</button>":"<span></span>")+(next?'<button class="btn" data-act="week" data-n="'+next.n+'">다음: '+next.n+"주차</button>":"")+"</div>";
+  return out+"</article></div>";
+}
+
+function renderMaterials(c,w){
+  var parts=[],decks=w.decks||[];
+  if(decks.length){
+    var d=decks[Math.min(view.deck,decks.length-1)],pg=view.page[d.id]||0;
+    parts.push((decks.length>1?'<div class="row deck-tabs">'+decks.map(function(x,i){return'<button class="btn" aria-pressed="'+(x===d)+'" data-act="deck" data-i="'+i+'">'+esc(x.label)+"</button>"}).join("")+"</div>":"")
+      +'<div class="viewer" data-deck="'+esc(d.id)+'" data-n="'+d.n+'"><div class="frame"><img id="slide-img" alt="'+esc(w.title)+' 슬라이드" draggable="false"></div>'
+      +'<div class="controls"><button class="btn" data-act="slide" data-d="-1">이전</button><span class="mono" id="slide-count">'+(pg+1)+" / "+d.n+'</span><button class="btn" data-act="slide" data-d="1">다음</button></div></div>');
+  }
+  var links=(w.links||[]).filter(function(l){return safeUrl(l.url)});
+  if(links.length)parts.push('<ul>'+links.map(function(l,i){return'<li><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.label)+"</a>"+(teacher?' <button class="link" data-act="del-link" data-i="'+(w.links||[]).indexOf(l)+'">삭제</button>':"")+"</li>"}).join("")+"</ul>");
+  if(teacher)parts.push('<form id="add-link"><div class="row" style="align-items:end"><label class="f" style="flex:1 1 160px">자료 이름<input type="text" id="l-label" required maxlength="80" placeholder="예: Colab 공유 링크"></label><label class="f" style="flex:2 1 240px">주소 (https)<input type="url" id="l-url" required placeholder="https://"></label><button class="btn" type="submit">자료 게시</button></div></form>');
+  if(w.exam&&!parts.length)return"";
+  if(!decks.length)parts.unshift('<p class="muted">이번 주 수업 슬라이드는 준비 중입니다.</p>');
+  return '<section class="stack">'+parts.join("")+"</section>";
+}
+function paintSlide(){
+  var v=document.querySelector(".viewer"),img=document.getElementById("slide-img");if(!v||!img)return;
+  var id=v.dataset.deck,pg=view.page[id]||0,k=Math.floor(pg/10),key=id+"/"+k;
+  document.getElementById("slide-count").textContent=(pg+1)+" / "+v.dataset.n;
+  var show=function(list){if(view.page[id]===undefined||view.page[id]===pg)img.src=list[pg%10]};
+  if(chunks[key]){show(chunks[key]);return}
+  img.removeAttribute("src");
+  fetch("d/"+key+".json").then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(list){chunks[key]=list;if(document.getElementById("slide-img")===img)show(list)})
+    .catch(function(){if(document.getElementById("slide-img")===img){msg={err:true,text:"슬라이드를 불러오지 못했습니다. 페이지를 새로 고쳐 주세요."};render()}});
+}
+function moveSlide(delta){
+  var v=document.querySelector(".viewer");if(!v)return;
+  var id=v.dataset.deck,n=Number(v.dataset.n),pg=(view.page[id]||0)+delta;
+  if(pg<0||pg>=n)return;
+  view.page[id]=pg;paintSlide();
+}
+
+function renderQ(w,q,i){
+  var k=w.n+":"+i,a=answers[k],done=a!==undefined;
+  var opts=q.options.map(function(o,j){
+    var cls="opt"+(done&&j===q.a?" right":"")+(done&&j===a&&j!==q.a?" wrong":"");
+    return '<button class="'+cls+'" data-act="answer" data-k="'+k+'" data-j="'+j+'">'+esc(o)+"</button>"}).join("");
+  return '<div class="q"><fieldset><legend>'+(i+1)+". "+esc(q.q)+"</legend>"+opts+"</fieldset>"+(done?'<p class="why" role="status">'+(a===q.a?"맞습니다. ":"다시 볼까요? ")+esc(q.why)+"</p>":"")+"</div>";
+}
+
+function renderInfo(c){
+  var o='<article class="sheet">';
+  if(c.overview)o+='<section class="stack"><h2>과목 개요</h2><p>'+esc(c.overview)+"</p></section>";
+  if(c.meta&&c.meta.length)o+='<section class="block"><h3>수업 정보</h3><div class="table-wrap"><table><tbody>'+c.meta.map(function(m){return'<tr><th scope="row">'+esc(m[0])+"</th><td>"+esc(m[1])+"</td></tr>"}).join("")+"</tbody></table></div></section>";
+  if(c.objectives&&c.objectives.length)o+='<section class="block"><h3>학습목표</h3><ol>'+c.objectives.map(function(x){return"<li>"+esc(x)+"</li>"}).join("")+"</ol></section>";
+  if(c.rhythm&&c.rhythm.length)o+='<section class="block"><h3>주당 수업 구성</h3><div class="table-wrap"><table><tbody>'+c.rhythm.map(function(m){return'<tr><th scope="row">'+esc(m[0])+"</th><td>"+esc(m[1])+"</td></tr>"}).join("")+"</tbody></table></div></section>";
+  o+='<section class="block"><h3>주차별 계획</h3><div class="table-wrap"><table><thead><tr><th>주</th><th>주제</th><th>핵심 개념</th><th>실습·활동</th></tr></thead><tbody>'+c.weeks.map(function(w){return'<tr'+(w.exam?' class="exam"':"")+'><td class="num">'+w.n+"</td><td>"+esc(w.title)+"</td><td>"+esc(w.concepts||"")+"</td><td>"+esc(w.practice||"")+"</td></tr>"}).join("")+"</tbody></table></div></section>";
+  if(c.grading&&c.grading.length)o+='<section class="block"><h3>평가</h3><div class="table-wrap"><table><thead><tr><th>항목</th><th>비율</th><th>내용</th></tr></thead><tbody>'+c.grading.map(function(g){return"<tr><td>"+esc(g[0])+'</td><td class="num">'+esc(g[1])+"</td><td>"+esc(g[2])+"</td></tr>"}).join("")+"</tbody></table></div></section>";
+  if(teacher&&c.added)o+='<section class="block"><h3>과목 관리</h3>'+(confirmDelete?'<p>이 과목을 교실에서 내립니다. 계속할까요?</p><div class="row"><button class="btn danger" data-act="del-course">삭제</button><button class="btn" data-act="cancel-del">취소</button></div>':'<div><button class="btn danger" data-act="ask-del">이 과목 삭제</button></div>')+"</section>";
+  return o+"</article>";
+}
+
+function renderCourse(c){
+  return '<header class="stack"><div><button class="link" data-act="home">전체 과목</button></div><h1>'+esc(c.title)+'</h1><p class="muted">'+esc(c.subtitle||"")+"</p></header>"+notice()+renderPlot(c)
+    +'<div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="'+(view.tab==="weeks")+'" data-act="tab" data-t="weeks">주차 학습</button><button class="tab" role="tab" aria-selected="'+(view.tab==="info")+'" data-act="tab" data-t="info">강의 안내</button></div>'
+    +(view.tab==="info"?renderInfo(c):renderWeek(c));
+}
+function modeBar(){
+  if(!canManage)return"";
+  return '<div class="notice top"><span>'+(teacher?"관리 화면입니다. 수강생에게는 과목 추가와 자료 관리 도구가 보이지 않습니다.":"수강생에게 보이는 화면입니다.")+'</span><button class="btn" data-act="mode">'+(teacher?"수강생 화면 보기":"관리 화면 열기")+"</button></div>";
+}
+function render(){var c=course();app.innerHTML=modeBar()+(c?renderCourse(c):renderHome());paintSlide()}
+
+function setHash(){try{var c=course();location.hash=c?(view.tab==="info"?c.id+"-info":c.id+"-w"+view.week):""}catch(e){}}
+function route(){
+  var h="";try{h=location.hash.slice(1)}catch(e){}
+  var m=/^(.+)-(w(\d+)|info)$/.exec(h),id=m?m[1]:h;
+  if(state.courses.some(function(c){return c.id===id})){
+    view.course=id;view.tab=m&&m[2]==="info"?"info":"weeks";
+    var c=course();view.week=m&&m[3]?Number(m[3]):nextWeek(c).n;
+  }else view.course=null;
+}
+
+/* Shared changes republish the whole page; open views reload to the new version. */
+function buildDoc(next){
+  var reset=document.head.querySelector("style");
+  var close="<"+"/script>";
+  var title=document.querySelector("title").outerHTML;
+  var meta=document.querySelector('meta[name="claude:viewport-fit-sides"]').outerHTML;
+  var font=document.querySelector('link[rel="stylesheet"]').outerHTML;
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>'+(reset?reset.textContent:"")+"</style></head><body>"
+    +title+meta+font+'<style id="app-style">'+document.getElementById("app-style").textContent+'</style><div id="app"></div>'
+    +'<script type="application/json" id="courses-data">'+JSON.stringify(next).replace(/</g,"\\u003c")+close
+    +'<script type="application/json" id="notebooks-data">'+document.getElementById("notebooks-data").textContent+close
+    +'<script id="app-code">'+document.getElementById("app-code").textContent+close+"</body></html>";
+}
+async function share(next,done){
+  if(!caps.artifact){msg={err:true,text:"이 화면에서는 저장할 수 없습니다. 교실 소유자 계정으로 열어 주세요."};render();return}
+  msg={text:"게시하는 중입니다."};render();
+  try{await caps.artifact.publish(buildDoc(next));state=next;msg={text:done};render()}
+  catch(e){
+    if(e&&e.code==="conflict")msg={text:"다른 곳에서 먼저 저장되어 새 버전을 불러옵니다. 다시 입력해 주세요."};
+    else if(e&&(e.code==="not_writer"||e.code==="not_granted")){teacher=false;canManage=false;msg={err:true,text:"이 계정은 읽기 전용이라 저장할 수 없습니다."}}
+    else msg={err:true,text:"저장하지 못했습니다. 잠시 후 다시 시도해 주세요."};
+    render();
+  }
+}
+function clone(){return JSON.parse(JSON.stringify(state))}
+
+/* Minimal store-only zip: .ipynb is not an allowed save type, .zip is. */
+var crcT=null;
+function crc32(b){
+  if(!crcT){crcT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;crcT[n]=c>>>0}}
+  var r=-1;for(var i=0;i<b.length;i++)r=crcT[(r^b[i])&255]^(r>>>8);return(r^-1)>>>0;
+}
+function zipOne(name,text){
+  var en=new TextEncoder(),nm=en.encode(name),d=en.encode(text),crc=crc32(d);
+  var loc=new DataView(new ArrayBuffer(30)),cen=new DataView(new ArrayBuffer(46)),end=new DataView(new ArrayBuffer(22));
+  loc.setUint32(0,0x04034b50,true);loc.setUint16(4,20,true);loc.setUint16(6,0x0800,true);loc.setUint32(14,crc,true);loc.setUint32(18,d.length,true);loc.setUint32(22,d.length,true);loc.setUint16(26,nm.length,true);
+  cen.setUint32(0,0x02014b50,true);cen.setUint16(4,20,true);cen.setUint16(6,20,true);cen.setUint16(8,0x0800,true);cen.setUint32(16,crc,true);cen.setUint32(20,d.length,true);cen.setUint32(24,d.length,true);cen.setUint16(28,nm.length,true);
+  var off=30+nm.length+d.length,cs=46+nm.length;
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,1,true);end.setUint16(10,1,true);end.setUint32(12,cs,true);end.setUint32(16,off,true);
+  return new Blob([loc.buffer,nm,d,cen.buffer,nm,end.buffer]);
+}
+async function getNotebook(file){
+  if(!caps.downloads){msg={err:true,text:"이 화면에서는 파일을 저장할 수 없습니다. 담당 교수에게 자료를 요청해 주세요."};render();return}
+  try{await caps.downloads.save({filename:file.replace(/\.ipynb$/,"")+".zip",data:zipOne(file,notebooks[file])})}
+  catch(e){if(!e||e.code!=="declined"){msg={err:true,text:"파일을 저장하지 못했습니다. 담당 교수에게 자료를 요청해 주세요."};render()}}
+}
+
+app.addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-act]");if(!t||t.type==="checkbox")return;
+  var a=t.dataset.act,keep=false;
+  if(a==="slide"){moveSlide(Number(t.dataset.d));return}
+  msg=null;
+  if(a==="sec"){view.sec=t.dataset.s;keep=true}
+  else if(a==="deck"){view.deck=Number(t.dataset.i);keep=true}
+  else if(a==="mode"){teacher=!teacher;confirmDelete=false;try{sessionStorage.setItem(KEY+"-manage",teacher?"1":"")}catch(e){}keep=true}
+  else if(a==="open"){view.course=t.dataset.id;view.tab="weeks";view.week=nextWeek(course()).n}
+  else if(a==="home"){view.course=null;confirmDelete=false}
+  else if(a==="week"){view.week=Number(t.dataset.n);view.tab="weeks";view.sec="content";view.deck=0}
+  else if(a==="tab"){view.tab=t.dataset.t;confirmDelete=false}
+  else if(a==="answer"){answers[t.dataset.k]=Number(t.dataset.j);keep=true}
+  else if(a==="notebook"){getNotebook(t.dataset.file);return}
+  else if(a==="ask-del"){confirmDelete=true;keep=true}
+  else if(a==="cancel-del"){confirmDelete=false;keep=true}
+  else if(a==="del-course"){var n=clone();n.courses=n.courses.filter(function(c){return c.id!==view.course});view.course=null;confirmDelete=false;setHash();share(n,"과목을 삭제했습니다.");return}
+  else if(a==="del-link"){var m=clone(),mc=m.courses.find(function(c){return c.id===view.course}),mw=mc.weeks.find(function(w){return w.n===view.week});mw.links.splice(Number(t.dataset.i),1);share(m,"자료를 삭제했습니다.");return}
+  render();
+  if(!keep){setHash();try{window.scrollTo(0,0)}catch(e){}}
+});
+app.addEventListener("change",function(ev){
+  var t=ev.target;if(t.dataset.act!=="check")return;
+  var c=course(),p=prog(c);p[t.dataset.key]=t.checked;saveProgress();render();
+  var again=document.getElementById(t.id);if(again)again.focus();
+});
+app.addEventListener("submit",function(ev){
+  ev.preventDefault();
+  if(ev.target.id==="add-course"){
+    var title=document.getElementById("c-title").value.trim();
+    var weeks=[];document.getElementById("c-weeks").value.split(/\r?\n/).forEach(function(l){
+      l=l.trim();if(!l)return;var ex=l[0]==="*";if(ex)l=l.slice(1);
+      var p=l.split("|").map(function(s){return s.trim()});
+      weeks.push({n:weeks.length+1,title:p[0],concepts:p[1]||"",practice:p[2]||"",exam:ex});
+    });
+    if(!title||!weeks.length){msg={err:true,text:"과목명과 주차를 한 줄 이상 입력해 주세요."};render();return}
+    var n=clone();
+    n.courses.push({id:"course-"+Date.now().toString(36),added:true,title:title,subtitle:document.getElementById("c-sub").value.trim(),overview:document.getElementById("c-over").value.trim(),weeks:weeks});
+    share(n,"과목을 게시했습니다.");
+  }else if(ev.target.id==="add-link"){
+    var label=document.getElementById("l-label").value.trim(),url=document.getElementById("l-url").value.trim();
+    if(!label||!safeUrl(url)){msg={err:true,text:"자료 이름과 https로 시작하는 주소를 입력해 주세요."};render();return}
+    var m=clone(),mc=m.courses.find(function(c){return c.id===view.course}),mw=mc.weeks.find(function(w){return w.n===view.week});
+    (mw.links=mw.links||[]).push({label:label,url:url});
+    share(m,"자료를 게시했습니다.");
+  }
+});
+document.addEventListener("keydown",function(ev){
+  if(/INPUT|TEXTAREA/.test(ev.target.tagName))return;
+  if(ev.key==="ArrowLeft")moveSlide(-1);else if(ev.key==="ArrowRight")moveSlide(1);
+});
+app.addEventListener("contextmenu",function(ev){if(ev.target.id==="slide-img")ev.preventDefault()});
+window.addEventListener("hashchange",function(){route();render()});
+route();render();
+
+if(window.claude&&window.claude.use){
+  window.claude.use("artifact").then(function(a){caps.artifact=a});
+  window.claude.use("downloads").then(function(d){caps.downloads=d});
+  window.claude.use("user").then(function(u){if(u&&u.canEdit()){canManage=true;try{teacher=sessionStorage.getItem(KEY+"-manage")==="1"}catch(e){}render()}});
+}
+})();
+</script>
